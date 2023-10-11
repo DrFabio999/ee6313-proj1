@@ -7,106 +7,137 @@ entity mips is
     (
         clk: in std_logic;
         reset: in std_logic;
-        pcout: out std_logic_vector (31 downto 0);
-        instr: in std_logic_vector (31 downto 0);
+        pcout: buffer std_logic_vector(31 downto 0);
+        instr: in std_logic_vector(31 downto 0);
         memwrite: out std_logic;
         aluout: out std_logic_vector(31 downto 0);
-        writedata: out std_logic_vector (31 downto 0);
-        readdata: in std_logic_vector (31 downto 0);
+        writedata: out std_logic_vector(31 downto 0);
+        readdata: in std_logic_vector(31 downto 0)
     );
 end entity mips;
 
 architecture behavior of mips is
 
-begin
-
 component register_file
-    port
-    (
-        A1: in std_logic_vector(4 downto 0);
-        A2: in std_logic_vector(4 downto 0);
-        A3: in std_logic_vector(4 downto 0);
-        clk: in std_logic;
-        WE3: in std_logic;
-        WD3: in std_logic_vector(31 downto 0);
-        RD1: out std_logic_vector(31 downto 0);
-        RD2: out std_logic_vector(31 downto 0);
-    );
+  port
+  (
+		A1: in std_logic_vector(4 downto 0);
+		A2: in std_logic_vector(4 downto 0);
+		A3: in std_logic_vector(4 downto 0);
+		clk: in std_logic;
+		WE3: in std_logic;
+		WD3: in std_logic_vector(31 downto 0);
+		RD1: out std_logic_vector(31 downto 0);
+		RD2: out std_logic_vector(31 downto 0)
+  );
 end component register_file;
 
 component alu
     port
     (
-        inputA: in std_logic_vector(31 downto 0);
-        inputB: in std_logic_vector(31 downto 0);
-        ALU_ctrl: in std_logic_vector(2 downto 0);
-        ALU_result: out std_logic_vector(31 downto 0);
+        inputA: in  STD_LOGIC_VECTOR(31 downto 0);
+        inputB: in  STD_LOGIC_VECTOR(31 downto 0);
+        ctrl:   in  STD_LOGIC_VECTOR(2 downto 0);
+        result: buffer STD_LOGIC_VECTOR(31 downto 0);
+		  zero: out std_logic
     );
 end component alu;
 
 component controller
-    port
-    (
-        op: in std_logic_vector(5 downto 0);
-        funct: in std_logic_vector(5 downto 0);
-        zero: in std_logic;
-        memtoreg: out std_logic;
-        memwrite: out std_logic;
-        pcsrc: out std_logic;
-        alusrc: out std_logic;
-        regdst: out std_logic;
-        regwrite: out std_logic;
-        jump: out std_logic;
-        alucontrol: out std_logic_vector(2 downto 0);
-    );
+  port
+  (
+		op: in std_logic_vector(5 downto 0);
+		funct: in std_logic_vector(5 downto 0);
+		zero: in std_logic;
+		memtoreg: out std_logic;
+		memwrite: out std_logic;
+		pcsrc: out std_logic;
+		alusrc: out std_logic;
+		regdst: out std_logic;
+		regwrite: out std_logic;
+		jump: out std_logic;
+		alucontrol: out std_logic_vector(2 downto 0)
+  );
 end component controller;
 
-signal memtoreg: std_logic;
-signal memtowrite: std_logic;
-signal pcsrc: std_logic;
-signal alusrc: std_logic;
-signal regdst: std_logic;
-signal regwrite: std_logic;
-signal jump: std_logic;
-signal aluctl: std_logic_vector(2 downto 0);
+component pc is
+    port
+    (
+        clk: in std_logic;
+        PCsrc: in std_logic;
+        jump: in std_logic;
+        immed: in std_logic_vector(31 downto 0);
+        instr: in std_logic_vector(31 downto 0);
+        pcout: out std_logic_vector(31 downto 0)
+    );
+end component pc;
 
-signal aluInputB: std_logic_vector(31 downto 0);
-signal A3: std_logic_vector(4 downto 0);
-signal RD1: std_logic_vector(31 downto 0);
-signal RD2: std_logic_vector(31 downto 0);
-signal result: std_logic_vector(31 downto 0);
+signal memtoreg: std_logic := '0';
+signal memtowrite: std_logic := '0';
+signal pcsrc: std_logic := '0';
+signal alusrc: std_logic := '0';
+signal regdst: std_logic := '0';
+signal regwrite: std_logic := '0';
+signal jump: std_logic := '0';
+signal aluctl: std_logic_vector(2 downto 0) := (others=>'0');
+signal zero: std_logic := '0';
 
+signal aluInputB: std_logic_vector(31 downto 0) := (others=>'0');
+signal A3: std_logic_vector(4 downto 0) := (others=>'0');
+signal RD1: std_logic_vector(31 downto 0) := (others=>'0');
+signal RD2: std_logic_vector(31 downto 0) := (others=>'0');
+signal result: std_logic_vector(31 downto 0) := (others=>'0');
+signal alures: std_logic_vector(31 downto 0) := (others=>'0');
 
-controller port map(op=>instr(31 downto 26), funct=>instr(5 downto 0),zero=>open,
-                    memtoreg=>memtoreg,memtowrite=>memtowrite,pcsrc=>pcsrc,
+signal signImm: std_logic_vector(31 downto 0) := (others=>'0');
+
+signal PCplus4: std_logic_vector(31 downto 0) := (others=>'0');
+
+signal instruction: std_logic_vector(31 downto 0) := (others=>'0');
+
+begin
+
+controller1: controller port map(op=>instruction(31 downto 26), funct=>instruction(5 downto 0),zero=>zero,
+                    memtoreg=>memtoreg,memwrite=>memtowrite,pcsrc=>pcsrc,
                     alusrc=>alusrc,regdst=>regdst,regwrite=>regwrite,jump=>jump,
                     alucontrol=>aluctl);
 
-alu port map(inputA=>RD1,inputB=>aluInputB,ALU_ctrl=>aluctl,ALU_result=>aluout);
-register_file port map(A1=>instr(25 downto 21),A2=>instr(20 downto 16),A3=>A3,clk=>clk,WE3=>regwrite,WD3=>result,RD1=>RD1,RD2=>RD2);
+alu1: alu port map(inputA=>RD1,inputB=>aluInputB,ctrl=>aluctl,result=>alures,zero=>zero);
+register_file1: register_file port map(A1=>instruction(25 downto 21),A2=>instruction(20 downto 16),A3=>A3,clk=>clk,WE3=>regwrite,WD3=>result,RD1=>RD1,RD2=>RD2);
+pc1: pc port map(clk=>clk,PCsrc=>pcsrc,jump=>jump,immed=>signImm,instr=>instruction,pcout=>pcout);
 
-if(regdst == '0') then
-    A3 <= instr(20 downto 16);
-else then
-    A3 <= instr(15 downto 11);
-end;
+process (regdst,instruction) begin
+if regdst = '0' then
+    A3 <= instruction(20 downto 16);
+else
+    A3 <= instruction(15 downto 11);
+end if;
+end process;
 
+instruction <= instr;
 writedata <= RD2;
+aluout <= alures;
 
-if(memtoreg == '0') then
-    result <= aluout;
+process (memtoreg, alures, readdata) begin
+if memtoreg = '0' then
+    result <= alures;
 else
     result <= readdata;
-end;
+end if;
+end process;
 
-if(alusrc == '0') then
+process(alusrc,RD2,signImm) begin
+if alusrc = '0' then
     aluInputB <= RD2;
 else
+    aluInputB <= signImm;
+end if;
+end process;
 
-end;
+signImm <= std_logic_vector(resize(signed(instruction(15 downto 0)),32));
 
---todo: implement sign extend
---todo: implement PC
+
+--todo: implement load and store
 --todo: finish routing all signals
 --todo: review all work
 --todo: suffer <3

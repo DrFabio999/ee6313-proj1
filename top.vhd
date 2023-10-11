@@ -14,7 +14,7 @@ architecture test of top is
 
 component mips is -- single cycle MIPS processor
 port (clk, reset: in STD_LOGIC;
-pcout: out STD_LOGIC_VECTOR (31 downto 0);
+pcout: buffer STD_LOGIC_VECTOR (31 downto 0);
 instr: in STD_LOGIC_VECTOR (31 downto 0);
 memwrite: out STD_LOGIC;
 aluout, writedata: out STD_LOGIC_VECTOR (31 downto 0);
@@ -38,13 +38,13 @@ begin
 
 -- instantiate processor and memories
 mips1: mips 
-port map (clk, reset, pcout, instr, memwrite, dataadr, writedata, readdata);
+port map (clk=>clk, reset=>reset, pcout=>pcout, instr=>instr, memwrite=>memwrite, writedata=>writedata, readdata=>readdata);
 
 imem1: imem 
-port map (pcout (7 downto 2), instr);
+port map (a=>pcout (7 downto 2), rd=>instr);
 
 dmem1: dmem 
-port map (clk, memwrite, dataadr, writedata, readdata);
+port map (clk=>clk, we=>memwrite, a=>dataadr, wd=>writedata, rd=>readdata);
 
 
 end;

@@ -5,10 +5,10 @@ port(
 clk: in std_logic;
 rst: in std_logic;
 d_in: in std_logic_vector(7 downto 0); -- input1
-d_out: out std_logic_vector(7 downto 0)); -- output, 1 bit wider
+d_out: out std_logic_vector(7 downto 0)); attribute noprune: boolean; attribute noprune of d_out: signal is true; -- output, 1 bit wider
 end regis;
 architecture arch1 of regis is
-signal d_R: std_logic_vector(7 downto 0); -- output register
+signal d_R: std_logic_vector(7 downto 0); attribute noprune of d_R: signal is true;-- output register
 begin
 process(clk, rst)
 begin
