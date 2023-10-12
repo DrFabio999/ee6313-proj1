@@ -38,7 +38,7 @@ process(ctrl,inputA,inputB,result) begin
 					zero <= '0';
 				end if;
         when  "111" =>
-            if signed(inputA) > signed(inputB) then
+            if signed(inputA) < signed(inputB) then
 					result <= "00000000000000000000000000000001";
 				else
 					result <= "00000000000000000000000000000000";

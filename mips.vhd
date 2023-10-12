@@ -84,9 +84,9 @@ signal zero: std_logic := '0';
 
 signal aluInputB: std_logic_vector(31 downto 0) := (others=>'0');
 signal A3: std_logic_vector(4 downto 0) := (others=>'0');
-signal RD1: std_logic_vector(31 downto 0) := (others=>'0');
-signal RD2: std_logic_vector(31 downto 0) := (others=>'0');
-signal result: std_logic_vector(31 downto 0) := (others=>'0');
+signal RD1: std_logic_vector(31 downto 0) := (others=>'L');
+signal RD2: std_logic_vector(31 downto 0) := (others=>'L');
+signal result: std_logic_vector(31 downto 0) := (others=>'L');
 signal alures: std_logic_vector(31 downto 0) := (others=>'0');
 
 signal signImm: std_logic_vector(31 downto 0) := (others=>'0');
@@ -115,7 +115,7 @@ end if;
 end process;
 
 instruction <= instr;
-writedata <= RD2;
+--writedata <= RD2;
 aluout <= alures;
 
 process (memtoreg, alures, readdata) begin
@@ -136,7 +136,8 @@ end process;
 
 signImm <= std_logic_vector(resize(signed(instruction(15 downto 0)),32));
 
-
+--todo: figure out what is going wrong with the alu interfacing with registers.
+--				potentially address getting corrupted somehow?
 --todo: implement load and store
 --todo: finish routing all signals
 --todo: review all work
