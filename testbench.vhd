@@ -47,7 +47,7 @@ end process;
 -- at end of program
 
 process (clk) begin
-	if (clk'event and clk ='0' and memwrite = '1') then
+	if (rising_edge(clk) and memwrite = '1') then
 		if (conv_integer(dataadr) = 84 and conv_integer(writedata) = 7) then
 			report "Simulation succeeded";
 		elsif (dataadr /= 80) then

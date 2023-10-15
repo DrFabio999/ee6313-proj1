@@ -29,4 +29,12 @@ clk <= '1';
 wait for clk_period/2;
 end process;
 
+process begin
+	reset <= '1';
+wait for 22 ns;
+	reset <= '0';
+wait;
+end process;
+
+
 end tb_arch_top;

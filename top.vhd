@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity top is -- top-level design for testing
 port (clk, reset: in STD_LOGIC;
-writedata, dataadr: buffer STD_LOGIC_VECTOR (31 downto 0);
+writedata, dataadr: buffer STD_LOGIC_VECTOR (31 downto 0) := (others=>'0');
 memwrite: buffer STD_LOGIC);
 end;
 
@@ -32,19 +32,28 @@ a, wd: in STD_LOGIC_VECTOR (31 downto 0);
 rd: out STD_LOGIC_VECTOR (31 downto 0));
 end component;
 
-signal pcout, instr, readdata: STD_LOGIC_VECTOR (31 downto 0);
+signal pcout, instr, readdata, aluout, imem_out: STD_LOGIC_VECTOR (31 downto 0);
 
 begin
 
 -- instantiate processor and memories
 mips1: mips 
-port map (clk=>clk, reset=>reset, pcout=>pcout, instr=>instr, memwrite=>memwrite, writedata=>writedata, readdata=>readdata);
+port map (clk=>clk, reset=>reset, pcout=>pcout, instr=>instr, memwrite=>memwrite, writedata=>writedata, readdata=>readdata, aluout=>aluout);
 
 imem1: imem 
-port map (a=>pcout (7 downto 2), rd=>instr);
+port map (a=>pcout (7 downto 2), rd=>imem_out);
 
 dmem1: dmem 
 port map (clk=>clk, we=>memwrite, a=>dataadr, wd=>writedata, rd=>readdata);
 
+dataadr <= aluout;
+
+process(imem_out,reset) begin
+if reset = '1' then
+	instr <= (others=>'0');
+else
+	instr <= imem_out;
+end if;
+end process;
 
 end;

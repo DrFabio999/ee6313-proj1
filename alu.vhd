@@ -21,23 +21,23 @@ begin
 
 process(ctrl,inputA,inputB,result) begin
     case ctrl is
-        when  "000" =>
-            result <= inputA and inputB;
+        when  "000" => --and op
+            result <= std_logic_vector(signed(inputA) and signed(inputB));
 				zero <= '0';
-        when  "001" =>
-            result <= inputA or inputB;
+        when  "001" => --or op
+            result <= std_logic_vector(signed(inputA) or signed(inputB));
 				zero <= '0';
-        when  "010" =>
+        when  "010" => --+ op
             result <= std_logic_vector(signed(inputA) + signed(inputB));
 				zero <= '0';
-        when  "110" =>
+        when  "110" => --- op
             result <= std_logic_vector(signed(inputA) - signed(inputB));
 				if result = "00000000000000000000000000000000" then
 					zero <= '1';
 				else
 					zero <= '0';
 				end if;
-        when  "111" =>
+        when  "111" => --slt op
             if signed(inputA) < signed(inputB) then
 					result <= "00000000000000000000000000000001";
 				else
@@ -45,7 +45,7 @@ process(ctrl,inputA,inputB,result) begin
 				end if;
 				zero <= '0';
         when others =>
-            result <= "--------------------------------";
+            result <= (others =>'-');
 				zero <= '0';
     end case;
 end process;

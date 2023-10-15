@@ -26,6 +26,7 @@ component register_file
 		A3: in std_logic_vector(4 downto 0);
 		clk: in std_logic;
 		WE3: in std_logic;
+		reset: in std_logic;
 		WD3: in std_logic_vector(31 downto 0);
 		RD1: out std_logic_vector(31 downto 0);
 		RD2: out std_logic_vector(31 downto 0)
@@ -66,6 +67,7 @@ component pc is
         clk: in std_logic;
         PCsrc: in std_logic;
         jump: in std_logic;
+		  reset: in std_logic;
         immed: in std_logic_vector(31 downto 0);
         instr: in std_logic_vector(31 downto 0);
         pcout: out std_logic_vector(31 downto 0)
@@ -103,8 +105,8 @@ controller1: controller port map(op=>instruction(31 downto 26), funct=>instructi
                     alucontrol=>aluctl);
 
 alu1: alu port map(inputA=>RD1,inputB=>aluInputB,ctrl=>aluctl,result=>alures,zero=>zero);
-register_file1: register_file port map(A1=>instruction(25 downto 21),A2=>instruction(20 downto 16),A3=>A3,clk=>clk,WE3=>regwrite,WD3=>result,RD1=>RD1,RD2=>RD2);
-pc1: pc port map(clk=>clk,PCsrc=>pcsrc,jump=>jump,immed=>signImm,instr=>instruction,pcout=>pcout);
+register_file1: register_file port map(A1=>instruction(25 downto 21),A2=>instruction(20 downto 16),A3=>A3,clk=>clk,WE3=>regwrite,reset=>reset,WD3=>result,RD1=>RD1,RD2=>RD2);
+pc1: pc port map(clk=>clk,PCsrc=>pcsrc,jump=>jump,reset=>reset,immed=>signImm,instr=>instruction,pcout=>pcout);
 
 process (regdst,instruction) begin
 if regdst = '0' then
@@ -114,8 +116,9 @@ else
 end if;
 end process;
 
+memwrite <= memtowrite;
 instruction <= instr;
---writedata <= RD2;
+writedata <= RD2;
 aluout <= alures;
 
 process (memtoreg, alures, readdata) begin
@@ -136,11 +139,6 @@ end process;
 
 signImm <= std_logic_vector(resize(signed(instruction(15 downto 0)),32));
 
---todo: figure out what is going wrong with the alu interfacing with registers.
---				potentially address getting corrupted somehow?
---todo: implement load and store
---todo: finish routing all signals
---todo: review all work
 --todo: suffer <3
 
 end;
